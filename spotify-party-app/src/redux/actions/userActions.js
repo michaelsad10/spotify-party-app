@@ -8,6 +8,11 @@ export const getUserInfo = (info) => ({
   payload: info,
 });
 
+export const setConfig = (config) => ({
+  type: "SET_CONFIG",
+  payload: config,
+});
+
 export const logOut = () => ({
   type: "LOGOUT",
 });

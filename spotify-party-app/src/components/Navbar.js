@@ -1,13 +1,19 @@
 import React, { Component } from "react";
-import { AppBar, Toolbar, Button, Typography, Avatar } from "@material-ui/core";
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  Typography,
+  Avatar,
+  IconButton,
+} from "@material-ui/core";
 
 import { connect } from "react-redux";
-import { logIn, getUserInfo } from "../redux/actions/userActions";
+import { logIn, getUserInfo, setConfig } from "../redux/actions/userActions";
+import { getPlaylists } from "../redux/actions/playlistActions";
 import axios from "axios";
 
 const authEndpoint = "https://accounts.spotify.com/authorize?";
-const clientId = "cb6478161dfb42689b3bca3314c573a2";
-const redirectUri = "http://localhost:3000";
 const scopes = [
   "user-read-currently-playing",
   "user-read-playback-state",
@@ -19,9 +25,9 @@ const scopes = [
 const redirect =
   authEndpoint +
   "client_id=" +
-  clientId +
+  process.env.REACT_APP_SPOTIFY_CLIENT_ID +
   "&redirect_uri=" +
-  redirectUri +
+  process.env.REACT_APP_REDIRECT_URI +
   "&scope=" +
   scopes[0] +
   "%20" +
@@ -64,14 +70,14 @@ class Navbar extends Component {
             this.state.params.accessToken,
         },
       };
-      console.log(config);
-      //   console.log(this.props.tokenType);
-      //   console.log(this.props.accessToken);
+      this.props.setConfig(config);
       axios
         .get("https://api.spotify.com/v1/me", config)
         .then((response) => this.props.getUserInfo(response.data));
+      axios
+        .get("https://api.spotify.com/v1/me/playlists?limit=50", config)
+        .then((response) => this.props.getPlaylists(response.data));
     }
-    console.log(this.state.params);
   }
 
   getHashParams() {
@@ -104,15 +110,31 @@ class Navbar extends Component {
       </div>
     );
     if (this.props.accessToken !== "") {
-      nav = (
-        <div>
-          <Button color="inherit"> Log Out</Button>
-          <Typography> {this.props.displayName}</Typography>
-          <Avatar alt={this.props.displayName} src={this.props.profilePic} />
-        </div>
-      );
+      if (this.props.profilePic === "") {
+        nav = (
+          <>
+            <IconButton edge="start">
+              <Avatar>{this.props.displayName.substring(1)}</Avatar>
+            </IconButton>
+            <Typography variant="h6">{this.props.displayName}</Typography>
+            <Button color="inherit"> Log Out</Button>
+          </>
+        );
+      } else {
+        nav = (
+          <>
+            <IconButton edge="start">
+              <Avatar
+                alt={this.props.displayName}
+                src={this.props.profilePic}
+              />
+            </IconButton>
+            <Typography variant="h6">{this.props.displayName}</Typography>
+            <Button color="inherit"> Log Out</Button>
+          </>
+        );
+      }
     }
-    // console.log(this.props.accessToken);
     return (
       <AppBar position="static">
         <Toolbar>{nav}</Toolbar>
@@ -122,7 +144,6 @@ class Navbar extends Component {
 }
 
 const mapStateToProps = (state) => {
-  console.log(state);
   return {
     accessToken: state.userReducer.accessToken,
     tokenType: state.userReducer.tokenType,
@@ -131,6 +152,6 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = { logIn, getUserInfo };
+const mapDispatchToProps = { logIn, getUserInfo, getPlaylists, setConfig };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Navbar);

@@ -6,6 +6,7 @@ const initialState = {
   expiresIn: "",
   displayName: "",
   profilePic: "",
+  config: {},
 };
 
 export default function (state = initialState, action) {
@@ -27,6 +28,13 @@ export default function (state = initialState, action) {
         userId: action.payload.id,
         displayName: action.payload.display_name,
         profilePic: action.payload.images[0].url,
+      };
+    }
+    case "SET_CONFIG": {
+      console.log(action.payload);
+      return {
+        ...state,
+        config: action.payload,
       };
     }
     default:
